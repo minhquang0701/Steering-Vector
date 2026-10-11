@@ -1,0 +1,25 @@
+# Small pretrained-model pilot, not a statistically powered security evaluation.
+dataset: data/processed/pilot.jsonl
+output_dir: runs/cpu_pilot
+model:
+  name: HuggingFaceTB/SmolLM2-135M-Instruct
+  device: cpu
+  cache_dir: artifacts/model-cache
+  local_files_only: true
+  seed: 42
+  max_input_tokens: 2048
+  threads: 4
+layers: [8, 20]
+sites: [residual, mlp, both]
+methods: [mean_difference, paired_pca]
+alphas: [0, 1, 5]
+positions: [decision]
+scale: absolute
+seed: 42
+random_seeds: [42, 43, 44]
+max_new_tokens: 24
+utility_tolerance: 0.05
+controller:
+  enabled: true
+  epochs: 3
+  learning_rate: 0.02

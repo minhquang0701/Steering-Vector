@@ -1,0 +1,132 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,graphicx,booktabs}
+\usepackage[hidelinks]{hyperref}
+\title{Source-Aware Security Steering with Learned Intervention Strength}
+\author{Author and affiliation to be supplied}
+\date{Research draft --- September 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+We describe a reproducible experimental framework for testing whether inference-time
+activation steering can reduce indirect prompt injection while preserving legitimate
+task completion. The framework constructs paired safe, injected, and hard-benign contexts;
+estimates layer- and site-specific security directions; compares selected placement with
+randomized controls; and learns intervention strength using a small contextual bandit.
+Security and utility are evaluated separately and jointly. This manuscript documents an
+implemented method and pilot protocol, not an established defense advantage. Publication
+claims require larger held-out experiments and native agent-environment evaluation.
+\end{abstract}
+
+\section{Motivation and related work}
+An assistant may encounter attacker instructions in externally supplied data. We study
+interventions that preserve the user's task when such data is included in the context.
+Prompt injection is a recognized application risk~\cite{owasp2025}. SEAL estimates
+reasoning directions offline and offsets hidden representations during generation~\cite{chen2025seal}.
+Its reasoning-calibration results motivate our hypothesis but do not validate a prompt
+injection defense. ARGUS studies instruction-following steering and adaptive strength for
+multimodal injection~\cite{lu2025argus}; ICON combines latent probing with inference-time
+attention correction~\cite{wang2026icon}. Accordingly, we make no priority claim for the
+general idea of steering against injection. Our experimental focus is the comparison of
+representation estimators, residual/MLP placement, and reward-based strength selection.
+
+\section{Threat model and data}
+System policy and user intent are trusted. Retrieved records, web pages, tool outputs,
+memory records and agent messages are untrusted data. The attacker may modify one such
+record, but not its trusted provenance label. Each controlled family retains a common
+legitimate task while varying the injected instruction or its benign quotation. Seven
+categories cover override, reveal, exfiltration, tool misuse, memory poisoning, source
+confusion and obfuscation. These are task annotations rather than a proven behavior taxonomy.
+All canaries are fictional; actions are simulated and never executed externally.
+
+The collection pipeline also adapts BIPIA EmailQA~\cite{yi2023bipia} and InjecAgent
+tool responses~\cite{injecagent}. Static adaptations retain source hashes and mark outcomes
+without sufficient task checks as unknown. These results are not directly comparable
+to their native benchmark protocols. AgentDojo~\cite{agentdojo} provides an appropriate
+next environment for validating actual action outcomes.
+
+Families, declared template groups, exact duplicate inputs, and duplicate attack payloads
+are grouped before splitting. Official test examples remain held out. Train data fits
+vectors and controllers, validation chooses hyperparameters, and the final test plan is
+saved before test execution. This controls exact leakage, not semantic overlap or
+pretraining contamination.
+
+\section{Security directions}
+For layer $l$, site $s$, and type $k$, the mean-difference estimator is
+\begin{equation}
+v_{l,s,k}=\operatorname{normalize}\left(\mu^{safe}_{l,s,k}-\mu^{attack}_{l,s,k}\right).
+\end{equation}
+We retain both class prototypes and compare this estimator with family-balanced paired
+means, sign-oriented uncentered PCA of paired differences, and a ridge-probe direction.
+The default inference intervention uses a global vector, avoiding access to the test
+example's true attack type. Class vectors support fixed-type ablations.
+
+Representations are collected with hooks at the exact residual or MLP output used at
+inference. This avoids mixing sites or using a final-normalized hidden state as though it
+were a raw decoder output. Prompt-condition labels are not observed behavior labels:
+separability may reflect wording or source formatting. Future behavior-labelled
+continuation contrasts are necessary to interpret a direction as malicious compliance.
+
+\section{Intervention and controls}
+For the frozen base model, we apply
+\begin{equation}
+h'_{l,t}=h_{l,t}+m_t\alpha v_{l,s,k}.
+\end{equation}
+This is a local inference offset, not a recurrence across time and not a weight update.
+Alpha denotes intervention strength. Decision-token, prefill-only, decode-only, and
+all-position schedules are available. Multiple active sites/layers share a nominal
+alpha budget. Absolute and activation-norm-relative scaling are supported.
+
+Validation compares residual, MLP, and combined placement over layers, strengths and
+estimators. Controls include the unsteered model, matched random layers, norm-matched
+random directions, and sign reversal. All arms share prompt formatting and greedy
+decoding. Placement is sampled per family and seed for the random-layer arm. We report
+utility-constraint failures explicitly and retain the baseline as a recommendation option.
+
+\section{Learning intervention strength}
+A train-only logistic probe provides an attack-risk proxy from unsteered decision states.
+A two-layer tanh network receives this proxy and observable length/source features, then
+selects alpha from a finite grid containing zero. A one-response episode receives reward
+\begin{equation}
+R=w_s\mathbf{1}[\text{valid and no measured violation}]
++w_u\mathbf{1}[\text{task completed}]-\lambda |\alpha|.
+\end{equation}
+We optimize the categorical policy with REINFORCE and a running reward baseline. This
+is a contextual bandit, not a sequence-level RL agent or a guarantee of the globally
+optimal alpha. Actions, propensities, features and rewards are logged. Examples without
+complete security and utility checks cannot provide training rewards. The policy and
+risk probe are frozen for final evaluation; no test labels are inference features.
+
+\section{Evaluation and pilot results}
+Report attack success rate (ASR), benign utility (BU), attacked utility (AU), and joint
+security/task success. A correct answer may coexist with successful exfiltration, while
+a refusal may prevent an attack without satisfying the task. Unknown outcomes remain
+ungraded, with explicit denominators. Output-format failures are distinguished from
+diagnostic answer presence. Canary, tool and memory checks are necessarily limited by
+the serialized-action protocol. Token counts and end-to-end generation latency accompany
+the accuracy measures; probe prepasses should be included in deployment cost estimates.
+
+Wilson intervals describe individual rates. Paired method differences use a family-level
+bootstrap to preserve correlations between variants. Random weights test software only.
+Pilots with small pretrained models assess feasibility and cannot establish robust defense gains.
+
+\IfFileExists{pilot_results.tex}{\input{pilot_results.tex}}{
+No numerical research claim is made in this draft. The experiment command writes
+\texttt{report.md}, \texttt{metrics.csv}, \texttt{summary.json}, and
+\texttt{results\_table.tex}. Include reviewed, appropriately labelled results here.
+}
+
+\section{Limitations and next experiments}
+The present setup does not prove a universal security direction, calibrated detection,
+native tool safety, robustness against an adaptive attacker, or cross-model transfer.
+Vector scale and source formatting can confound placement comparisons. Template-based
+tasks may be too narrow; their exact-match criteria may penalize harmless extra prose.
+Future evaluation should hold out attack authors and sources, use stronger models and
+native environments, reproduce ARGUS/ICON-style baselines where applicable, compare
+behavior-conditioned vectors, and repeat controller training with independent seeds.
+Mentorship, conference acceptance and financial support are external outcomes and are
+not represented as completed experimental milestones.
+
+\bibliographystyle{plain}
+\bibliography{references}
+\end{document}

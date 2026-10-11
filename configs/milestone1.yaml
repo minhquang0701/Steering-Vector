@@ -1,0 +1,53 @@
+project:
+  name: source-aware-security-steering
+  objective: prompt-injection defense with source-aware security vectors
+
+dataset:
+  seed_path: data/seed/security_steering_seed.jsonl
+  required_variants:
+    - safe
+    - attack
+  attack_classes:
+    - override
+    - reveal
+    - exfiltration
+    - tool_misuse
+    - memory_poisoning
+    - source_confusion
+    - obfuscation
+
+hidden_states:
+  model_name: Qwen/Qwen2.5-0.5B-Instruct
+  candidate_layer_fractions:
+    - 0.25
+    - 0.40
+    - 0.50
+    - 0.60
+    - 0.75
+    - 0.90
+  anchor_positions:
+    - end_of_untrusted_segment
+    - boundary_after_untrusted_segment
+    - first_assistant_tokens
+    - tool_call_decision_tokens
+    - tool_argument_tokens
+    - memory_write_decision_tokens
+    - agent_handoff_tokens
+
+vectors:
+  methods:
+    - mean_difference
+    - probe_direction
+    - projection_removal
+  normalize: true
+
+evaluation:
+  metrics:
+    - attack_success_rate
+    - benign_task_success
+    - tool_misuse_rate
+    - data_leakage_rate
+    - memory_poisoning_rate
+    - over_refusal_rate
+    - false_positive_rate
+    - probe_auc

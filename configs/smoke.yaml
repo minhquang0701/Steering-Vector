@@ -1,0 +1,27 @@
+dataset: data/processed/controlled.jsonl
+output_dir: runs/smoke
+model:
+  name: tiny-random
+  device: cpu
+  seed: 42
+  max_input_tokens: 2048
+  threads: 2
+layers: [0, 2]
+sites: [residual, mlp, both]
+methods: [mean_difference, paired_mean, paired_pca, ridge_probe]
+alphas: [0, 1, 3]
+positions: [decision]
+scale: absolute
+seed: 42
+random_seeds: [42, 43, 44]
+max_new_tokens: 8
+utility_tolerance: 0.05
+controller:
+  enabled: true
+  epochs: 2
+  learning_rate: 0.02
+  hidden: 16
+  reward:
+    security_weight: 1.0
+    utility_weight: 1.0
+    alpha_cost: 0.01

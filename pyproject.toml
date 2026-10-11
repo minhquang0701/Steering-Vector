@@ -1,0 +1,35 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "source-aware-security-steering"
+version = "0.2.0"
+description = "Reproducible activation steering and adaptive alpha research for prompt injection defense."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "numpy>=1.24",
+  "PyYAML>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+  "ruff>=0.5",
+]
+ml = [
+  "torch>=2.2,<3",
+  "transformers>=4.45,<5",
+]
+plots = ["matplotlib>=3.7"]
+
+[project.scripts]
+security-steering = "security_steering.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/security_steering"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"

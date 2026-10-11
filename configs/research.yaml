@@ -1,0 +1,30 @@
+# Paths are relative to the directory in which the command is invoked.
+dataset: data/processed/hybrid_with_llm.jsonl
+output_dir: runs/qwen_research
+model:
+  name: Qwen/Qwen2.5-0.5B-Instruct
+  device: cuda
+  revision: main  # Pin a commit before a publication run; resolved identity is recorded.
+  cache_dir: artifacts/model-cache
+  seed: 42
+  max_input_tokens: 4096
+layers: [6, 10, 14, 18, 22]
+sites: [residual, mlp, both]
+methods: [mean_difference, paired_mean, paired_pca, ridge_probe]
+alphas: [0, 1, 3, 5, 10]
+positions: [decision, prefill, decode]
+multi_layer: true
+scale: absolute
+seed: 42
+random_seeds: [42, 43, 44, 45, 46]
+max_new_tokens: 128
+utility_tolerance: 0.03
+controller:
+  enabled: true
+  epochs: 10
+  hidden: 16
+  learning_rate: 0.02
+  reward:
+    security_weight: 1.0
+    utility_weight: 1.0
+    alpha_cost: 0.01

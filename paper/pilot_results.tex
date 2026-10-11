@@ -1,0 +1,30 @@
+\subsection{Small CPU feasibility pilot}
+A SmolLM2-135M-Instruct run used 24 training examples, six validation examples and six
+test examples across two independent test families. We compared 24 validation settings
+and trained the alpha controller for 72 updates. The primary rubric required the code
+alone, matching the user instruction. Baseline, selected fixed steering and adaptive
+steering all had zero strict task completion and zero observed attacker successes.
+Correct-code presence was 5/6 for every arm in a post-hoc diagnostic, often accompanied
+by disallowed introductory prose or Markdown. This diagnostic did not replace the
+predefined utility metric or determine model selection.
+
+\begin{center}
+\begin{tabular}{lrrr}
+\toprule
+Method & Attack success & Benign task success & Joint success \\
+\midrule
+Unsteered baseline & 0/2 & 0/4 & 0/6 \\
+Selected fixed steering & 0/2 & 0/4 & 0/6 \\
+Neural alpha policy & 0/2 & 0/4 & 0/6 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Random-layer/direction controls and sign reversal had identical aggregate outcomes.
+The selected nonzero intervention used the mean-difference direction at residual layer
+8 with alpha=1; validation did not prefer it over baseline. The learned policy chose
+alpha=1 in all test cases. With only two attacked examples, the descriptive Wilson 95\%
+upper bound for ASR is approximately 65.8\%. These results establish pipeline execution,
+not useful defense gains or successful adaptive calibration. The original logs and
+configuration are retained in \texttt{runs/cpu\_pilot}; see
+\texttt{docs/pilot\_findings.md} for provenance and interpretation limits.
